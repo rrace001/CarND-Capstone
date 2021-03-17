@@ -76,6 +76,7 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+
         self.has_image = True
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
@@ -98,11 +99,32 @@ class TLDetector(object):
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
 
+
+        # collect images and label for training offline
+        # comment out when not used
+        '''
+        x = self.pose.pose.position.x
+        y = self.pose.pose.position.y
+        closest_idx = self.get_closest_waypoint_idx(x,y)
+        farthest_idx = closest_idx + 100    
+
+        light_visible = 0 
+        if(light_wp):
+            if light_wp > closest_idx and light_wp < farthest_idx:
+                light_visible = 1
+
+        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+        directory = '/home/rrace001/CarND-Capstone/imgs_train/'
+        #time = self.camera_image.header.stamp # stamps gives 0 ?
+        time = rospy.get_rostime()
+        cv2.imwrite(directory + 'tl-' + str(light_visible) + "-" + str(state) + ":" + str(time) + '.jpeg', cv_image)  # comment out when not collecting images for training   
+        '''
+
     def get_closest_waypoint_idx(self, x, y):
         """Identifies the closest path waypoint to the given position
             https://en.wikipedia.org/wiki/Closest_pair_of_points_problem
         Args:
-            pose (x, y): position to match a waypoint to
+             (x, y): position to match a waypoint to
 
         Returns:
             int: index of the closest waypoint in self.waypoints
@@ -147,10 +169,10 @@ class TLDetector(object):
             self.prev_light_loc = None
             return False
 
-        cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
-        
+        #cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+
         #Get classification
-        state = self.light_classifier.get_classification(cv_image)
+        #state = self.light_classifier.get_classification(cv_image)
         
         return light.state 
 
